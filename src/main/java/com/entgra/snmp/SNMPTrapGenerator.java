@@ -44,7 +44,7 @@ public class SNMPTrapGenerator{
     private static final String community = "public";      //SET THIS
     private static final String trapOid = ".1.3.6.1.2.1.1.6";
     private static final String ipAddress = "127.0.0.1";     //SET THIS (this is the destination address)
-    private static final int port = 1024;
+    private static final int port = 1620;
 
     public static void main(String args[]) {
 
