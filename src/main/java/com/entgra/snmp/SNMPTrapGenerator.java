@@ -35,6 +35,8 @@ import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
 
+import java.text.ParseException;
+
 /**
  * @author
  *
@@ -89,6 +91,7 @@ public class SNMPTrapGenerator{
         pdu.add(new VariableBinding(SnmpConstants.snmpTrapOID, new OID(trapOid)));
         pdu.add(new VariableBinding(SnmpConstants.snmpTrapAddress, new IpAddress(
                 ipAddress)));
+        pdu.add(new VariableBinding(new OID(SnmpConstants.snmpSetSerialNo), new OctetString("XX_THINGSBOARD_TOKEN_ABC")));
         pdu.add(new VariableBinding(new OID(trapOid), new OctetString("Major")));
         return pdu;
     }

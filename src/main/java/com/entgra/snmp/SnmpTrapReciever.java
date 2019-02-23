@@ -134,6 +134,7 @@ public class SnmpTrapReciever implements CommandResponder {
             System.out.println("snmpVersion " + String.valueOf(PDU.TRAP));
             System.out.println("communityString " + new String(crEvent.getSecurityName()));
 
+
         }
 
         Vector<? extends VariableBinding> varBinds = pdu.getVariableBindings();
@@ -141,7 +142,8 @@ public class SnmpTrapReciever implements CommandResponder {
             Iterator<? extends VariableBinding> varIter = varBinds.iterator();
 
             StringBuilder resultset = new StringBuilder();
-            resultset.append("-----");
+//            resultset.append("-----");
+            System.out.println("------");
             while (varIter.hasNext()) {
                 VariableBinding vb = varIter.next();
 
