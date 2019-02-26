@@ -51,10 +51,10 @@ import java.util.regex.Pattern;
  */
 public class SNMPTrapGenerator{
 
-    private static final String community = "public";      //SET THIS
+    private static final String community = "nusFFVsZDbAEGMFauNj3";      //SET THIS
     private static final String trapOid = ".1.3.6.1.2.1.1.6";
     private static final String ipAddress = "127.0.0.1";     //SET THIS (this is the destination address)
-    private static final int port = 1620;
+    private static final int port = 1630;
 
     public static void main(String args[]) {
 
@@ -98,7 +98,6 @@ public class SNMPTrapGenerator{
         pdu.add(new VariableBinding(SnmpConstants.sysUpTime, new TimeTicks(new SystemInfo().getHardware().getProcessor().getSystemUptime())));
         pdu.add(new VariableBinding(SnmpConstants.snmpTrapOID, new OID(trapOid)));
         pdu.add(new VariableBinding(SnmpConstants.snmpTrapAddress, new IpAddress(ipAddress)));
-        pdu.add(new VariableBinding(SnmpConstants.snmpSetSerialNo, new OctetString("oxIy13zN1ifJBebDDbUI")));
         pdu.add(new VariableBinding(new OID(trapOid), new OctetString("Major")));
         return pdu;
     }
@@ -127,6 +126,7 @@ public class SNMPTrapGenerator{
             System.out.println("Sent Trap to (IP:Port)=> " + ipAddress + ":" + port);
             snmp.close();
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println("Error in Sending Trap to (IP:Port)=> " + ipAddress
                     + ":" + port);
             System.err.println("Exception Message = " + e.getMessage());
