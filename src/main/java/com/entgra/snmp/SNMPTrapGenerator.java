@@ -30,12 +30,20 @@ import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.IpAddress;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
+import org.snmp4j.smi.TimeTicks;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
+import oshi.SystemInfo;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author
@@ -87,11 +95,10 @@ public class SNMPTrapGenerator{
             pdu= pdu2;
         }
 
-        pdu.add(new VariableBinding(SnmpConstants.sysUpTime));
+        pdu.add(new VariableBinding(SnmpConstants.sysUpTime, new TimeTicks(new SystemInfo().getHardware().getProcessor().getSystemUptime())));
         pdu.add(new VariableBinding(SnmpConstants.snmpTrapOID, new OID(trapOid)));
-        pdu.add(new VariableBinding(SnmpConstants.snmpTrapAddress, new IpAddress(
-                ipAddress)));
-        pdu.add(new VariableBinding(new OID(SnmpConstants.snmpSetSerialNo), new OctetString("XX_THINGSBOARD_TOKEN_ABC")));
+        pdu.add(new VariableBinding(SnmpConstants.snmpTrapAddress, new IpAddress(ipAddress)));
+        pdu.add(new VariableBinding(SnmpConstants.snmpSetSerialNo, new OctetString("oxIy13zN1ifJBebDDbUI")));
         pdu.add(new VariableBinding(new OID(trapOid), new OctetString("Major")));
         return pdu;
     }
