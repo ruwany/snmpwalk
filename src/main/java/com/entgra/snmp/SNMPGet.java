@@ -21,7 +21,9 @@ public class SNMPGet
 
     // OID of MIB RFC 1213; Scalar Object = .iso.org.dod.internet.mgmt.mib-2.system.sysDescr.0
     //private static String  oidValue  = ".1.3.6.1.2.1.1.1.0"; // System Descriptor
-    private static String  oidValue  = ".1.3.6.1.2.1.1.3.0";  // System Uptime
+//    private static String  oidValue  = ".1.3.6.1.2.1.1.3.0";  // System Uptime
+
+    private static String  oidValue  = ".1.3.6.1.2.1.1.1.0";
 
     private static int    snmpVersion  = SnmpConstants.version2c;
 
