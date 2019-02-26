@@ -17,15 +17,11 @@ import org.snmp4j.agent.mo.snmp.StorageType;
 import org.snmp4j.agent.mo.snmp.VacmMIB;
 import org.snmp4j.agent.security.MutableVACM;
 import org.snmp4j.mp.MPv3;
+import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.security.SecurityLevel;
 import org.snmp4j.security.SecurityModel;
 import org.snmp4j.security.USM;
-import org.snmp4j.smi.Address;
-import org.snmp4j.smi.GenericAddress;
-import org.snmp4j.smi.Integer32;
-import org.snmp4j.smi.OID;
-import org.snmp4j.smi.OctetString;
-import org.snmp4j.smi.Variable;
+import org.snmp4j.smi.*;
 import org.snmp4j.transport.TransportMappings;
 
 public class Agent extends BaseAgent {
@@ -56,12 +52,22 @@ public class Agent extends BaseAgent {
     protected void registerManagedObjects() {
         getSnmpv2MIB().unregisterMOs(server, getContext(getSnmpv2MIB()));
 
-        MOScalar mo = new MOScalar(new OID(".1.3.6.1.2.1.1.1.0"),
-                MOAccessImpl.ACCESS_READ_ONLY, new OctetString("My Agent System Description"));
+        registerManagedObject(new MOScalar(SnmpConstants.sysUpTime, MOAccessImpl.ACCESS_READ_ONLY, new TimeTicks(new SystemInfo().getHardware().getProcessor().getSystemUptime())));
+        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.2.20"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 2")));
+        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.2.23"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 3")));
+        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.1.21"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 4")));
+        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.4.2.1.2"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 5")));
+
+    }
+
+    private void registerManagedObject(MOScalar mo) {
         try {
             server.register(mo, null);
+            System.out.print("Successfully registered ");
+            System.out.println(mo.getID());
         } catch (DuplicateRegistrationException e) {
-            e.printStackTrace();
+            System.out.print("Failed to register ");
+            System.out.println(mo.getID());
         }
     }
 
