@@ -3,6 +3,9 @@ package com.entgra.snmp;
 import java.io.File;
 import java.io.IOException;
 
+import org.snmp4j.CommunityTarget;
+import org.snmp4j.PDU;
+import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
 import org.snmp4j.agent.BaseAgent;
 import org.snmp4j.agent.CommandProcessor;
@@ -22,9 +25,15 @@ import org.snmp4j.security.SecurityLevel;
 import org.snmp4j.security.SecurityModel;
 import org.snmp4j.security.USM;
 import org.snmp4j.smi.*;
+import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.transport.TransportMappings;
+import oshi.SystemInfo;
 
 public class Agent extends BaseAgent {
+
+    private static final String community = "nusFFVsZDbAEGMFauNj3";      //SET THIS
+    private static final String ipAddress = "127.0.0.1";     //SET THIS (this is the destination address)
+    private static final int port = 1620;
 
     public Agent() {
         super(new File("bootCounterFile.txt"), new File("configFile.txt"),
@@ -34,7 +43,7 @@ public class Agent extends BaseAgent {
     @Override
     protected void initTransportMappings() throws IOException {
         transportMappings = new TransportMapping<?>[1];
-        Address addr = GenericAddress.parse("127.0.0.1/1024");
+        Address addr = GenericAddress.parse("127.0.0.1/1630");
         TransportMapping<? extends Address> tm = TransportMappings.getInstance().createTransportMapping(addr);
         transportMappings[0] = tm;
     }
@@ -46,7 +55,46 @@ public class Agent extends BaseAgent {
         finishInit();
         run();
         sendColdStartNotification();
+        sendV2Trap();
     }
+
+    private static PDU createTrapPdu() {
+        PDU pdu = new PDU();
+        pdu.setType(PDU.TRAP);
+        pdu.setRequestID(new Integer32(123));
+        pdu.add(new VariableBinding(SnmpConstants.coldStart, new OctetString("Started")));
+        return pdu;
+    }
+
+    private void sendV2Trap() {
+        try {
+            // create v1/v2 PDU
+            PDU snmpPDU = createTrapPdu();
+
+            // Create Target
+            CommunityTarget comtarget = new CommunityTarget();
+            comtarget.setCommunity(new OctetString(community));
+            comtarget.setVersion(SnmpConstants.version2c);
+            comtarget.setAddress(new UdpAddress(ipAddress + "/" + port));
+            comtarget.setRetries(2);
+            comtarget.setTimeout(5000);
+
+            // Create Transport Mapping
+            TransportMapping<?> transport = new DefaultUdpTransportMapping();
+
+            // Send the PDU
+            Snmp snmp = new Snmp(transport);
+            snmp.send(snmpPDU, comtarget);
+            System.out.println("Sent Trap to (IP:Port)=> " + ipAddress + ":" + port);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error in Sending Trap to (IP:Port)=> " + ipAddress
+                    + ":" + port);
+            System.err.println("Exception Message = " + e.getMessage());
+        }
+    }
+
+
 
     @Override
     protected void registerManagedObjects() {
@@ -102,7 +150,7 @@ public class Agent extends BaseAgent {
     @Override
     protected void addCommunities(SnmpCommunityMIB communityMIB) {
         Variable[] com2sec = new Variable[] {
-                new OctetString("public"),              // community name
+                new OctetString(community),              // community name
                 new OctetString("cpublic"),             // security name
                 getAgent().getContextEngineID(),        // local engine ID
                 new OctetString("public"),              // default context name
