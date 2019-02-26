@@ -17,7 +17,7 @@ public class SNMPGet
 {
     private static String  ipAddress  = "127.0.0.1";
 
-    private static String  port    = "1024";
+    private static String  port    = "1620";
 
     // OID of MIB RFC 1213; Scalar Object = .iso.org.dod.internet.mgmt.mib-2.system.sysDescr.0
     //private static String  oidValue  = ".1.3.6.1.2.1.1.1.0"; // System Descriptor

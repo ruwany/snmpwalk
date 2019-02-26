@@ -55,7 +55,6 @@ public class SnmpTrapReciever implements CommandResponder {
     private void run() {
         try {
             init();
-            snmp.addCommandResponder(this);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -107,6 +106,7 @@ public class SnmpTrapReciever implements CommandResponder {
                         authpassphrase), PrivAES128.ID, new OctetString(privacypassphrase)));
 
         snmp.listen();
+        snmp.addCommandResponder(this);
     }
 
     public void processPdu(CommandResponderEvent crEvent) {
