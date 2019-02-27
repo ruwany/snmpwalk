@@ -1,23 +1,13 @@
 package com.entgra.snmp;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
-import org.snmp4j.agent.BaseAgent;
-import org.snmp4j.agent.CommandProcessor;
-import org.snmp4j.agent.DuplicateRegistrationException;
+import org.snmp4j.agent.*;
 import org.snmp4j.agent.mo.MOAccessImpl;
 import org.snmp4j.agent.mo.MOScalar;
-import org.snmp4j.agent.mo.snmp.RowStatus;
-import org.snmp4j.agent.mo.snmp.SnmpCommunityMIB;
-import org.snmp4j.agent.mo.snmp.SnmpNotificationMIB;
-import org.snmp4j.agent.mo.snmp.SnmpTargetMIB;
-import org.snmp4j.agent.mo.snmp.StorageType;
-import org.snmp4j.agent.mo.snmp.VacmMIB;
+import org.snmp4j.agent.mo.snmp.*;
 import org.snmp4j.agent.security.MutableVACM;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.mp.SnmpConstants;
@@ -29,11 +19,17 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.transport.TransportMappings;
 import oshi.SystemInfo;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
 public class Agent extends BaseAgent {
 
     private static final String community = "nusFFVsZDbAEGMFauNj3";      //SET THIS
     private static final String ipAddress = "127.0.0.1";     //SET THIS (this is the destination address)
     private static final int port = 1620;
+    private Set<OID> registeredOIDs = new HashSet<OID>();
 
     public Agent() {
         super(new File("bootCounterFile.txt"), new File("configFile.txt"),
@@ -95,33 +91,40 @@ public class Agent extends BaseAgent {
     }
 
 
-
     @Override
     protected void registerManagedObjects() {
-        getSnmpv2MIB().unregisterMOs(server, getContext(getSnmpv2MIB()));
+        getSnmpv2MIB().unregisterMOs(server, new OctetString("public"));
+        System.out.println("Updating MIBs...");
+        registerManagedObject(new MOScalar(SnmpConstants.sysUpTime, MOAccessImpl.ACCESS_READ_WRITE, new TimeTicks(new SystemInfo().getHardware().getProcessor().getSystemUptime())));
+        registeredOIDs.add(SnmpConstants.sysUpTime);
+    }
 
-        registerManagedObject(new MOScalar(SnmpConstants.sysUpTime, MOAccessImpl.ACCESS_READ_ONLY, new TimeTicks(new SystemInfo().getHardware().getProcessor().getSystemUptime())));
-        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.2.20"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 2")));
-        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.2.23"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 3")));
-        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.1.21"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 4")));
-        registerManagedObject(new MOScalar(new OID("1.3.6.1.4.1.32437.1.5.1.4.2.1.2"), MOAccessImpl.ACCESS_READ_ONLY, new OctetString("object 5")));
 
+    public void unregisterManagedObject(MOGroup moGroup) {
+        moGroup.unregisterMOs(server, getContext(moGroup));
     }
 
     private void registerManagedObject(MOScalar mo) {
         try {
-            server.register(mo, null);
+            server.register(mo, new OctetString("public"));
             System.out.print("Successfully registered ");
             System.out.println(mo.getID());
         } catch (DuplicateRegistrationException e) {
-            System.out.print("Failed to register ");
+            System.out.print("Failed to register " + e.getMessage());
             System.out.println(mo.getID());
         }
     }
 
     @Override
     protected void unregisterManagedObjects() {
-        // do nothing
+
+        for (OID oid : registeredOIDs) {
+            ManagedObject mo = server.getManagedObject(oid, null);
+            if (mo != null) {
+                server.unregister(mo, null);
+            }
+        }
+        registeredOIDs.clear();
     }
 
     @Override
