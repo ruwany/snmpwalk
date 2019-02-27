@@ -10,12 +10,9 @@ public class AgentInitializer {
             while(true) {
                 System.out.println("Agent running...");
                 Thread.sleep(5000);
-//                agent.unregisterManagedObject(agent.getSnmpv2MIB());
                 agent.registerManagedObjects();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }

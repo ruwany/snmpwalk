@@ -4,17 +4,33 @@ import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
-import org.snmp4j.agent.*;
+import org.snmp4j.agent.BaseAgent;
+import org.snmp4j.agent.CommandProcessor;
+import org.snmp4j.agent.DuplicateRegistrationException;
+import org.snmp4j.agent.ManagedObject;
 import org.snmp4j.agent.mo.MOAccessImpl;
 import org.snmp4j.agent.mo.MOScalar;
-import org.snmp4j.agent.mo.snmp.*;
+import org.snmp4j.agent.mo.snmp.RowStatus;
+import org.snmp4j.agent.mo.snmp.SnmpCommunityMIB;
+import org.snmp4j.agent.mo.snmp.SnmpNotificationMIB;
+import org.snmp4j.agent.mo.snmp.SnmpTargetMIB;
+import org.snmp4j.agent.mo.snmp.StorageType;
+import org.snmp4j.agent.mo.snmp.VacmMIB;
 import org.snmp4j.agent.security.MutableVACM;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.security.SecurityLevel;
 import org.snmp4j.security.SecurityModel;
 import org.snmp4j.security.USM;
-import org.snmp4j.smi.*;
+import org.snmp4j.smi.Address;
+import org.snmp4j.smi.GenericAddress;
+import org.snmp4j.smi.Integer32;
+import org.snmp4j.smi.OID;
+import org.snmp4j.smi.OctetString;
+import org.snmp4j.smi.TimeTicks;
+import org.snmp4j.smi.UdpAddress;
+import org.snmp4j.smi.Variable;
+import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.transport.TransportMappings;
 import oshi.SystemInfo;
@@ -26,10 +42,10 @@ import java.util.Set;
 
 public class Agent extends BaseAgent {
 
-    private static final String community = "nusFFVsZDbAEGMFauNj3";      //SET THIS
-    private static final String ipAddress = "127.0.0.1";     //SET THIS (this is the destination address)
-    private static final int port = 1620;
-    private Set<OID> registeredOIDs = new HashSet<OID>();
+    private static final String community = "nusFFVsZDbAEGMFauNj3"; //Auth token of the device
+    private static final String ipAddress = "127.0.0.1"; //Thingsboard IP address
+    private static final int port = 1620; //Thingsboard SNMP port
+    private Set<OID> registeredOIDs = new HashSet<>();
 
     public Agent() {
         super(new File("bootCounterFile.txt"), new File("configFile.txt"),
@@ -37,9 +53,9 @@ public class Agent extends BaseAgent {
     }
 
     @Override
-    protected void initTransportMappings() throws IOException {
+    protected void initTransportMappings() {
         transportMappings = new TransportMapping<?>[1];
-        Address addr = GenericAddress.parse("127.0.0.1/1630");
+        Address addr = GenericAddress.parse("127.0.0.1/1630"); //IP and port of this test client
         TransportMapping<? extends Address> tm = TransportMappings.getInstance().createTransportMapping(addr);
         transportMappings[0] = tm;
     }
@@ -95,13 +111,11 @@ public class Agent extends BaseAgent {
     protected void registerManagedObjects() {
         getSnmpv2MIB().unregisterMOs(server, new OctetString("public"));
         System.out.println("Updating MIBs...");
-        registerManagedObject(new MOScalar(SnmpConstants.sysUpTime, MOAccessImpl.ACCESS_READ_WRITE, new TimeTicks(new SystemInfo().getHardware().getProcessor().getSystemUptime())));
+        registerManagedObject(new MOScalar(SnmpConstants.sysUpTime, MOAccessImpl.ACCESS_READ_ONLY, new TimeTicks(new SystemInfo().getHardware().getProcessor().getSystemUptime())));
+        registerManagedObject(new MOScalar(SnmpConstants.sysName, MOAccessImpl.ACCESS_READ_ONLY, new OctetString(new SystemInfo().getHardware().getComputerSystem().getModel())));
+
         registeredOIDs.add(SnmpConstants.sysUpTime);
-    }
-
-
-    public void unregisterManagedObject(MOGroup moGroup) {
-        moGroup.unregisterMOs(server, getContext(moGroup));
+        registeredOIDs.add(SnmpConstants.sysName);
     }
 
     private void registerManagedObject(MOScalar mo) {
